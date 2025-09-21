@@ -10,6 +10,11 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import java.io.File;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.RepositoryBuilder;
 
 public class MainActivity extends Activity {
     Button button;
@@ -24,10 +29,40 @@ public class MainActivity extends Activity {
         button.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-					// TODO: test jgit
+					try {
+						File folderToCheck = new File(
+							Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+							"MyTestRepo"
+						);
+						isGitRepository(folderToCheck);
+
+					} catch (Exception e) {
+						StringWriter sw = new StringWriter();
+						PrintWriter pw = new PrintWriter(sw);
+						e.printStackTrace(pw);
+						button.setText(sw.toString());
+					}
                 }
             });
 		setContentView(button);
+    }
+    private void isGitRepository(File directory) {
+        try {
+            Repository repository = new RepositoryBuilder()
+                .setGitDir(new File(directory, ".git"))
+                .setMustExist(true)
+                .build();
+
+            button.setText(directory.getName() + "\nBranch: " + repository.getBranch());
+
+            repository.close();
+
+        } catch (Exception e) {
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            button.setText(sw.toString());
+        }
     }
 
     public static boolean hasStoragePermission(Activity activity) {
